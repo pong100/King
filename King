@@ -6,7 +6,7 @@ local GOLD_DARK = Color3.fromRGB(150, 110, 20)
 local BG_DARK = Color3.fromRGB(20, 20, 20)
 local BG_LIGHT = Color3.fromRGB(30, 30, 30)
 
-function RoyalLib:CreateWindow(gameName, creatorName)
+function RoyalLib:CreateWindow(gameName, creatorName, defaultMiniBtnId)
     local selfInstance = setmetatable({}, RoyalLib)
     
     local ScreenGui = Instance.new("ScreenGui")
@@ -15,7 +15,7 @@ function RoyalLib:CreateWindow(gameName, creatorName)
     ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
     selfInstance.ScreenGui = ScreenGui
 
-    -- Main Frame (Khung chính)
+    -- Main Frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 520, 0, 420)
     MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
@@ -35,7 +35,7 @@ function RoyalLib:CreateWindow(gameName, creatorName)
     Stroke.Thickness = 2
     Stroke.Parent = MainFrame
 
-    -- Header (Tiêu đề)
+    -- Header
     local Header = Instance.new("Frame")
     Header.Size = UDim2.new(1, 0, 0, 55)
     Header.BackgroundColor3 = BG_LIGHT
@@ -88,24 +88,26 @@ function RoyalLib:CreateWindow(gameName, creatorName)
 
     selfInstance.Container = Container
 
-    -- ==========================================
-    -- 👑 TẠO MINI BUTTON (BẬT/TẮT GUI)
-    -- ==========================================
+    -- Mini Button (Nút thu nhỏ hình vuông bo tròn 4 cạnh)
     local MiniButton = Instance.new("ImageButton")
     MiniButton.Name = "MiniButton"
-    MiniButton.Size = UDim2.new(0, 50, 0, 50) -- Hình vuông 50x50
+    MiniButton.Size = UDim2.new(0, 50, 0, 50)
     MiniButton.Position = UDim2.new(0, 20, 0, 20)
     MiniButton.BackgroundColor3 = BG_LIGHT
     MiniButton.BorderSizePixel = 0
     MiniButton.Active = true
-    MiniButton.Draggable = true -- Có thể kéo thả nút mini khắp màn hình
-    MiniButton.Visible = false  -- Mặc định ẩn, chỉ hiện khi tắt khung chính
-    MiniButton.Image = "rbxassetid://4483362458" -- Ảnh Vương miện vàng mặc định
+    MiniButton.Draggable = true
+    MiniButton.Visible = false
+    
+    -- Gán ID người dùng nhập lúc tạo Window, nếu trống sẽ lấy ID vương miện mặc định
+    local finalId = defaultMiniBtnId or 4483362458
+    MiniButton.Image = "rbxassetid://" .. tostring(finalId):match("%d+")
+    
     MiniButton.Parent = ScreenGui
     selfInstance.MiniButton = MiniButton
 
     local MiniCorner = Instance.new("UICorner")
-    MiniCorner.CornerRadius = UDim.new(0, 12) -- 4 cạnh bo tròn đẹp mắt
+    MiniCorner.CornerRadius = UDim.new(0, 12)
     MiniCorner.Parent = MiniButton
 
     local MiniStroke = Instance.new("UIStroke")
@@ -113,8 +115,6 @@ function RoyalLib:CreateWindow(gameName, creatorName)
     MiniStroke.Thickness = 1.5
     MiniStroke.Parent = MiniButton
 
-    -- Logic nhấn nút để hoán đổi bật/tắt giữa MainFrame và MiniButton
-    -- Nút gạch chéo nhỏ góc trên bên phải MainFrame để thu nhỏ thành Mini Button
     local MinimizeBtn = Instance.new("TextButton")
     MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
     MinimizeBtn.Position = UDim2.new(1, -35, 0, 12)
@@ -376,70 +376,4 @@ function RoyalLib:CreateDropdown(text, list, callback)
     end)
 end
 
--- 🛠️ Ô NHẬP ID ĐỂ ĐỔI ẢNH MINI BUTTON (TextBox)
-function RoyalLib:CreateImageChanger(text)
-    local TextFrame = Instance.new("Frame")
-    TextFrame.Size = UDim2.new(1, -10, 0, 38)
-    TextFrame.BackgroundColor3 = BG_LIGHT
-    TextFrame.Parent = self.Container
-
-    local TFCorner = Instance.new("UICorner")
-    TFCorner.CornerRadius = UDim.new(0, 6)
-    TFCorner.Parent = TextFrame
-
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0, 160, 1, 0)
-    Label.Position = UDim2.new(0, 10, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.TextSize = 13
-    Label.Font = Enum.Font.SourceSansBold
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = TextFrame
-
-    local TextBox = Instance.new("TextBox")
-    TextBox.Size = UDim2.new(1, -180, 0, 26)
-    TextBox.Position = UDim2.new(1, -170, 0.5, -13)
-    TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    TextBox.Text = ""
-    TextBox.PlaceholderText = "Nhập ID ảnh..."
-    TextBox.TextColor3 = GOLD_MAIN
-    TextBox.TextSize = 13
-    TextBox.Font = Enum.Font.SourceSansBold
-    TextBox.Parent = TextFrame
-
-    local TBCorner = Instance.new("UICorner")
-    TBCorner.CornerRadius = UDim.new(0, 4)
-    TBCorner.Parent = TextBox
-
-    -- Tự động đổi ảnh khi người dùng gõ xong ID và nhấn Enter
-    TextBox.FocusLost:Connect(function(enterPressed)
-        if enterPressed and TextBox.Text ~= "" then
-            local cleanID = TextBox.Text:match("%d+") -- Lọc lấy chỉ số ID
-            if cleanID then
-                self.MiniButton.Image = "rbxassetid://" .. cleanID
-            end
-        end
-    end)
-end
-
--- ==========================================
--- 🚀 KHỞI TẠO HOẠT ĐỘNG
--- ==========================================
-local MyWindow = RoyalLib:CreateWindow("ĐẾ CHẾ HOÀNG GIA", "Nguyễn Văn A")
-
-RoyalLib:CreateLabel("⚡ TÍNH NĂNG TỰ ĐỘNG")
-MyWindow:CreateToggle("Auto Farm Quái", function(state) print(state) end)
-
-RoyalLib:CreateLabel("⚙️ ĐIỀU CHỈNH CHỈ SỐ")
-MyWindow:CreateSlider("Tốc Độ Chạy (Speed)", 16, 250, 16, function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end)
-
-RoyalLib:CreateLabel("📍 KHU VỰC DỊCH CHUYỂN")
-MyWindow:CreateDropdown("Chọn Đảo Để Bay", {"Đảo Tân Thủ", "Thành Phố"}, function(sel) print(sel) end)
-
-RoyalLib:CreateLabel("🖼️ TÙY CHỈNH MINI BUTTON")
-MyWindow:CreateImageChanger("Đổi Ảnh Nút Tròn (Nhập ID):")
-
-RoyalLib:CreateLabel("❌ HỆ THỐNG GIAO DIỆN")
-MyWindow:CreateButton("Xóa Toàn Bộ GUI (Destroy)", function() MyWindow.ScreenGui:Destroy() end)
+return RoyalLib
