@@ -1,0 +1,445 @@
+local RoyalLib = {}
+RoyalLib.__index = RoyalLib
+
+local GOLD_MAIN = Color3.fromRGB(212, 175, 55)
+local GOLD_DARK = Color3.fromRGB(150, 110, 20)
+local BG_DARK = Color3.fromRGB(20, 20, 20)
+local BG_LIGHT = Color3.fromRGB(30, 30, 30)
+
+function RoyalLib:CreateWindow(gameName, creatorName)
+    local selfInstance = setmetatable({}, RoyalLib)
+    
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "RoyalCustomLib"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    selfInstance.ScreenGui = ScreenGui
+
+    -- Main Frame (Khung chính)
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 520, 0, 420)
+    MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
+    MainFrame.BackgroundColor3 = BG_DARK
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    MainFrame.Parent = ScreenGui
+    selfInstance.MainFrame = MainFrame
+    
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 9)
+    Corner.Parent = MainFrame
+    
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Color = GOLD_MAIN
+    Stroke.Thickness = 2
+    Stroke.Parent = MainFrame
+
+    -- Header (Tiêu đề)
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, 55)
+    Header.BackgroundColor3 = BG_LIGHT
+    Header.BorderSizePixel = 0
+    Header.Parent = MainFrame
+    
+    local HeaderCorner = Instance.new("UICorner")
+    HeaderCorner.CornerRadius = UDim.new(0, 9)
+    HeaderCorner.Parent = Header
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+    TitleLabel.Position = UDim2.new(0, 0, 0, 4)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = "👑 " .. tostring(gameName) .. " 👑"
+    TitleLabel.TextColor3 = GOLD_MAIN
+    TitleLabel.TextSize = 19
+    TitleLabel.Font = Enum.Font.SourceSansBold
+    TitleLabel.Parent = Header
+
+    local CreatorLabel = Instance.new("TextLabel")
+    CreatorLabel.Size = UDim2.new(1, 0, 0, 20)
+    CreatorLabel.Position = UDim2.new(0, 0, 0, 28)
+    CreatorLabel.BackgroundTransparency = 1
+    CreatorLabel.Text = "Bởi: " .. tostring(creatorName) .. " (Creator)"
+    CreatorLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
+    CreatorLabel.TextSize = 12
+    CreatorLabel.Font = Enum.Font.SourceSansItalic
+    CreatorLabel.Parent = Header
+
+    -- Scrolling Container
+    local Container = Instance.new("ScrollingFrame")
+    Container.Size = UDim2.new(1, -20, 1, -80)
+    Container.Position = UDim2.new(0, 10, 0, 65)
+    Container.BackgroundTransparency = 1
+    Container.BorderSizePixel = 0
+    Container.ScrollBarThickness = 4
+    Container.ScrollBarImageColor3 = GOLD_MAIN
+    Container.Parent = MainFrame
+
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.Parent = Container
+    ListLayout.Padding = UDim.new(0, 8)
+    ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Container.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
+    end)
+
+    selfInstance.Container = Container
+
+    -- ==========================================
+    -- 👑 TẠO MINI BUTTON (BẬT/TẮT GUI)
+    -- ==========================================
+    local MiniButton = Instance.new("ImageButton")
+    MiniButton.Name = "MiniButton"
+    MiniButton.Size = UDim2.new(0, 50, 0, 50) -- Hình vuông 50x50
+    MiniButton.Position = UDim2.new(0, 20, 0, 20)
+    MiniButton.BackgroundColor3 = BG_LIGHT
+    MiniButton.BorderSizePixel = 0
+    MiniButton.Active = true
+    MiniButton.Draggable = true -- Có thể kéo thả nút mini khắp màn hình
+    MiniButton.Visible = false  -- Mặc định ẩn, chỉ hiện khi tắt khung chính
+    MiniButton.Image = "rbxassetid://4483362458" -- Ảnh Vương miện vàng mặc định
+    MiniButton.Parent = ScreenGui
+    selfInstance.MiniButton = MiniButton
+
+    local MiniCorner = Instance.new("UICorner")
+    MiniCorner.CornerRadius = UDim.new(0, 12) -- 4 cạnh bo tròn đẹp mắt
+    MiniCorner.Parent = MiniButton
+
+    local MiniStroke = Instance.new("UIStroke")
+    MiniStroke.Color = GOLD_MAIN
+    MiniStroke.Thickness = 1.5
+    MiniStroke.Parent = MiniButton
+
+    -- Logic nhấn nút để hoán đổi bật/tắt giữa MainFrame và MiniButton
+    -- Nút gạch chéo nhỏ góc trên bên phải MainFrame để thu nhỏ thành Mini Button
+    local MinimizeBtn = Instance.new("TextButton")
+    MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+    MinimizeBtn.Position = UDim2.new(1, -35, 0, 12)
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Text = "X"
+    MinimizeBtn.TextColor3 = Color3.fromRGB(200, 50, 50)
+    MinimizeBtn.TextSize = 18
+    MinimizeBtn.Font = Enum.Font.SourceSansBold
+    MinimizeBtn.Parent = MainFrame
+
+    MinimizeBtn.MouseButton1Click:Connect(function()
+        MainFrame.Visible = false
+        MiniButton.Visible = true
+    end)
+
+    MiniButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = true
+        MiniButton.Visible = false
+    end)
+
+    return selfInstance
+end
+
+function RoyalLib:CreateLabel(text)
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -10, 0, 25)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Label.TextSize = 14
+    Label.Font = Enum.Font.SourceSansItalic
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = self.Container
+end
+
+function RoyalLib:CreateButton(text, callback)
+    local callback = callback or function() end
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, -10, 0, 38)
+    Button.BackgroundColor3 = BG_LIGHT
+    Button.Text = text
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 14
+    Button.Font = Enum.Font.SourceSansBold
+    Button.BorderSizePixel = 0
+    Button.Parent = self.Container
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 6)
+    BtnCorner.Parent = Button
+
+    local BtnStroke = Instance.new("UIStroke")
+    BtnStroke.Color = GOLD_DARK
+    BtnStroke.Thickness = 1
+    BtnStroke.Parent = Button
+
+    Button.MouseEnter:Connect(function()
+        Button.BackgroundColor3 = GOLD_DARK
+        Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+    end)
+    Button.MouseLeave:Connect(function()
+        Button.BackgroundColor3 = BG_LIGHT
+        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    Button.MouseButton1Click:Connect(callback)
+end
+
+function RoyalLib:CreateToggle(text, callback)
+    local callback = callback or function() end
+    local toggled = false
+
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Size = UDim2.new(1, -10, 0, 38)
+    ToggleFrame.BackgroundColor3 = BG_LIGHT
+    ToggleFrame.BorderSizePixel = 0
+    ToggleFrame.Parent = self.Container
+
+    local TFCorner = Instance.new("UICorner")
+    TFCorner.CornerRadius = UDim.new(0, 6)
+    TFCorner.Parent = ToggleFrame
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, -60, 1, 0)
+    TextLabel.Position = UDim2.new(0, 10, 0, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = text
+    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextLabel.TextSize = 14
+    TextLabel.Font = Enum.Font.SourceSansBold
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.Parent = ToggleFrame
+
+    local Checkbox = Instance.new("TextButton")
+    Checkbox.Size = UDim2.new(0, 45, 0, 22)
+    Checkbox.Position = UDim2.new(1, -55, 0.5, -11)
+    Checkbox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Checkbox.Text = "OFF"
+    Checkbox.TextColor3 = Color3.fromRGB(150, 150, 150)
+    Checkbox.TextSize = 11
+    Checkbox.Font = Enum.Font.SourceSansBold
+    Checkbox.Parent = ToggleFrame
+
+    local CBCorner = Instance.new("UICorner")
+    CBCorner.CornerRadius = UDim.new(0, 4)
+    CBCorner.Parent = Checkbox
+
+    Checkbox.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        if toggled then
+            Checkbox.BackgroundColor3 = GOLD_MAIN
+            Checkbox.Text = "ON"
+            Checkbox.TextColor3 = Color3.fromRGB(0, 0, 0)
+        else
+            Checkbox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Checkbox.Text = "OFF"
+            Checkbox.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+        callback(toggled)
+    end)
+end
+
+function RoyalLib:CreateSlider(text, min, max, default, callback)
+    local callback = callback or function() end
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Size = UDim2.new(1, -10, 0, 45)
+    SliderFrame.BackgroundColor3 = BG_LIGHT
+    SliderFrame.Parent = self.Container
+    
+    local SFCorner = Instance.new("UICorner")
+    SFCorner.CornerRadius = UDim.new(0, 6)
+    SFCorner.Parent = SliderFrame
+    
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, -10, 0, 20)
+    TextLabel.Position = UDim2.new(0, 10, 0, 2)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = text .. " : " .. tostring(default)
+    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextLabel.TextSize = 13
+    TextLabel.Font = Enum.Font.SourceSansBold
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.Parent = SliderFrame
+    
+    local SliderBar = Instance.new("TextButton")
+    SliderBar.Size = UDim2.new(1, -20, 0, 6)
+    SliderBar.Position = UDim2.new(0, 10, 0, 28)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    SliderBar.Text = ""
+    SliderBar.Parent = SliderFrame
+    
+    local SBCorner = Instance.new("UICorner")
+    SBCorner.CornerRadius = UDim.new(0, 3)
+    SBCorner.Parent = SliderBar
+    
+    local SliderFill = Instance.new("Frame")
+    local initPercent = (default - min) / (max - min)
+    SliderFill.Size = UDim2.new(initPercent, 0, 1, 0)
+    SliderFill.BackgroundColor3 = GOLD_MAIN
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Parent = SliderBar
+    
+    local SFCorn = Instance.new("UICorner")
+    SFCorn.CornerRadius = UDim.new(0, 3)
+    SFCorn.Parent = SliderFill
+    
+    local UserInputService = game:GetService("UserInputService")
+    local dragging = false
+    
+    local function update(input)
+        local pos = UDim2.new(math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1), 0, 1, 0)
+        SliderFill.Size = pos
+        local value = math.floor(min + ((pos.X.Scale) * (max - min)))
+        TextLabel.Text = text .. " : " .. tostring(value)
+        callback(value)
+    end
+    
+    SliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            update(input)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            update(input)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
+
+function RoyalLib:CreateDropdown(text, list, callback)
+    local callback = callback or function() end
+    local isDropped = false
+    
+    local DropFrame = Instance.new("Frame")
+    DropFrame.Size = UDim2.new(1, -10, 0, 38)
+    DropFrame.BackgroundColor3 = BG_LIGHT
+    DropFrame.ClipsDescendants = true
+    DropFrame.Parent = self.Container
+    
+    local DFCorner = Instance.new("UICorner")
+    DFCorner.CornerRadius = UDim.new(0, 6)
+    DFCorner.Parent = DropFrame
+    
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(1, 0, 0, 38)
+    ToggleBtn.BackgroundTransparency = 1
+    ToggleBtn.Text = text .. " v"
+    ToggleBtn.TextColor3 = GOLD_MAIN
+    ToggleBtn.TextSize = 14
+    ToggleBtn.Font = Enum.Font.SourceSansBold
+    ToggleBtn.Parent = DropFrame
+    
+    local ButtonsContainer = Instance.new("Frame")
+    ButtonsContainer.Size = UDim2.new(1, 0, 1, -38)
+    ButtonsContainer.Position = UDim2.new(0, 0, 0, 38)
+    ButtonsContainer.BackgroundTransparency = 1
+    ButtonsContainer.Parent = DropFrame
+    
+    local UIList = Instance.new("UIListLayout")
+    UIList.Parent = ButtonsContainer
+    UIList.Padding = UDim.new(0, 4)
+    UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    
+    for _, opt in pairs(list) do
+        local OptBtn = Instance.new("TextButton")
+        OptBtn.Size = UDim2.new(1, -20, 0, 30)
+        OptBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        OptBtn.Text = tostring(opt)
+        OptBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        OptBtn.TextSize = 13
+        OptBtn.Font = Enum.Font.SourceSans
+        OptBtn.Parent = ButtonsContainer
+        
+        local OBCorner = Instance.new("UICorner")
+        OBCorner.CornerRadius = UDim.new(0, 4)
+        OBCorner.Parent = OptBtn
+        
+        OptBtn.MouseButton1Click:Connect(function()
+            ToggleBtn.Text = text .. " : (" .. tostring(opt) .. ")"
+            DropFrame.Size = UDim2.new(1, -10, 0, 38)
+            isDropped = false
+            callback(opt)
+        end)
+    end
+    
+    ToggleBtn.MouseButton1Click:Connect(function()
+        isDropped = not isDropped
+        if isDropped then
+            local targetHeight = 38 + (UIList.AbsoluteContentSize.Y) + 10
+            DropFrame.Size = UDim2.new(1, -10, 0, targetHeight)
+        else
+            DropFrame.Size = UDim2.new(1, -10, 0, 38)
+        end
+    end)
+end
+
+-- 🛠️ Ô NHẬP ID ĐỂ ĐỔI ẢNH MINI BUTTON (TextBox)
+function RoyalLib:CreateImageChanger(text)
+    local TextFrame = Instance.new("Frame")
+    TextFrame.Size = UDim2.new(1, -10, 0, 38)
+    TextFrame.BackgroundColor3 = BG_LIGHT
+    TextFrame.Parent = self.Container
+
+    local TFCorner = Instance.new("UICorner")
+    TFCorner.CornerRadius = UDim.new(0, 6)
+    TFCorner.Parent = TextFrame
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0, 160, 1, 0)
+    Label.Position = UDim2.new(0, 10, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.TextSize = 13
+    Label.Font = Enum.Font.SourceSansBold
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = TextFrame
+
+    local TextBox = Instance.new("TextBox")
+    TextBox.Size = UDim2.new(1, -180, 0, 26)
+    TextBox.Position = UDim2.new(1, -170, 0.5, -13)
+    TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    TextBox.Text = ""
+    TextBox.PlaceholderText = "Nhập ID ảnh..."
+    TextBox.TextColor3 = GOLD_MAIN
+    TextBox.TextSize = 13
+    TextBox.Font = Enum.Font.SourceSansBold
+    TextBox.Parent = TextFrame
+
+    local TBCorner = Instance.new("UICorner")
+    TBCorner.CornerRadius = UDim.new(0, 4)
+    TBCorner.Parent = TextBox
+
+    -- Tự động đổi ảnh khi người dùng gõ xong ID và nhấn Enter
+    TextBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed and TextBox.Text ~= "" then
+            local cleanID = TextBox.Text:match("%d+") -- Lọc lấy chỉ số ID
+            if cleanID then
+                self.MiniButton.Image = "rbxassetid://" .. cleanID
+            end
+        end
+    end)
+end
+
+-- ==========================================
+-- 🚀 KHỞI TẠO HOẠT ĐỘNG
+-- ==========================================
+local MyWindow = RoyalLib:CreateWindow("ĐẾ CHẾ HOÀNG GIA", "Nguyễn Văn A")
+
+RoyalLib:CreateLabel("⚡ TÍNH NĂNG TỰ ĐỘNG")
+MyWindow:CreateToggle("Auto Farm Quái", function(state) print(state) end)
+
+RoyalLib:CreateLabel("⚙️ ĐIỀU CHỈNH CHỈ SỐ")
+MyWindow:CreateSlider("Tốc Độ Chạy (Speed)", 16, 250, 16, function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end)
+
+RoyalLib:CreateLabel("📍 KHU VỰC DỊCH CHUYỂN")
+MyWindow:CreateDropdown("Chọn Đảo Để Bay", {"Đảo Tân Thủ", "Thành Phố"}, function(sel) print(sel) end)
+
+RoyalLib:CreateLabel("🖼️ TÙY CHỈNH MINI BUTTON")
+MyWindow:CreateImageChanger("Đổi Ảnh Nút Tròn (Nhập ID):")
+
+RoyalLib:CreateLabel("❌ HỆ THỐNG GIAO DIỆN")
+MyWindow:CreateButton("Xóa Toàn Bộ GUI (Destroy)", function() MyWindow.ScreenGui:Destroy() end)
